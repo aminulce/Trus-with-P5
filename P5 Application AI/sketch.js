@@ -4,25 +4,17 @@ class Node{
         this.X = clickX;
         this.Y = clickY;
         this.rad = nodeRad;
-        this.brightness = 0;
     }
 
     drawNode(){
         fill(255);
-        stroke(255,0,220);
+        stroke(100);
+        strokeWeight(1);
         ellipse(this.X, this.Y, this.rad*2);
     }
-    move()
-    {
-        this.X = this.X + random(2,-2);
-        this.Y = this.Y + random(2,-2);
-    }
-    clicked(x,y,i){
-        var d  = dist(x, y,this.X,this.Y);
-        if (d<=this.rad)
-        {
-            this.brightness = 255;
-        }
+
+    checkDistance(x,y){
+        return(dist(x, y,this.X,this.Y));
     }
 }
 
@@ -44,9 +36,11 @@ function setup() {
     radio.option('load');
     radio.option('support');
     radio.addClass("drawOptions");
+    noLoop();
 
 }
-
+var firstPress = 1;
+var distance = [];
 function mousePressed(){
     if(radio.value() == "node")
     {
@@ -56,34 +50,46 @@ function mousePressed(){
             nodes[nodeCount++].drawNode();
         }
     }
-
    if(radio.value() == "member")
    {
-    // get distance between mouse and circle
-    for (let i=0;i<nodes.length;i++)
-    {
-         distance[i]= dist(mouseX, mouseY, 200, 200); 
-        console.log(distance[i])
-        // if the distance is less than the circle's radius
-        if(distance < nodeRad)
-        {
+       stroke(0);
+       strokeWeight(2);
+       for (var i = 0; i<nodes.length; i++)
+       {
+            distance[i]=nodes[i].checkDistance(mouseX,mouseY);
 
-            isOverCircle = true;
-            cursor(HAND);
-        } else {
-            isOverCircle = false;
-            cursor(ARROW);
-        }
-    }
+            if(distance[i]<=nodeRad*2)
+            {
+                 //Drawing the member
+               if (firstPress == 1) {
+                firstPress = 0;
+                x0 = nodes[i].X;
+                y0 = nodes[i].Y;
+              }
+              else if (firstPress == 0) {
+                firstPress = 1;
+                x = nodes[i].X;
+                y = nodes[i].Y;
+                line(x0, y0, x, y);
+              }         
+            }
+       }
+       
+     
    }
 }
-var distance = [];
+//function mouseReleased() {
+//  noLoop();
+//}
+
+
 function draw() {
     background(255);
-
-
     
-    noLoop()
+
+   
+
+    //noLoop()
 }
 
 
