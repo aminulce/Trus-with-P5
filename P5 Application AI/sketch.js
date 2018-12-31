@@ -23,7 +23,6 @@ var canvas, canvasW = 500, canvasH = 500, X, Y, nodeRad = 5;
 var nodes = [];
 var sliderVal;
 var radio;
-var isOverCircle = false;
 let N;
 function setup() {
     canvas = createCanvas(canvasW,canvasH);
@@ -35,30 +34,46 @@ function setup() {
     radio.option('member');
     radio.option('load');
     radio.option('support');
+    
     radio.addClass("drawOptions");
     noLoop();
 
 }
 var firstPress = 1;
 var distance = [];
+var addNodePermit;
 function mousePressed(){
+    addNodePermit = true;
     if(radio.value() == "node")
     {
         if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
         {
-            nodes[nodeCount] = new Node(mouseX,mouseY,nodeRad);
-            nodes[nodeCount++].drawNode();
+            for (var i=0; i<nodes.length;i++)
+            {
+                distance[i]=nodes[i].checkDistance(mouseX,mouseY);
+                if(distance[i]<=nodeRad)
+                {
+                    addNodePermit = false;
+                    break;
+                }
+            }
+
+            if(addNodePermit == true)
+            {
+                nodes[nodeCount] = new Node(mouseX,mouseY,nodeRad);
+                nodes[nodeCount++].drawNode();
+            }
         }
     }
    if(radio.value() == "member")
    {
        stroke(0);
        strokeWeight(2);
-       for (var i = 0; i<nodes.length; i++)
+       for (i = 0; i<nodes.length; i++)
        {
             distance[i]=nodes[i].checkDistance(mouseX,mouseY);
 
-            if(distance[i]<=nodeRad*2)
+            if(distance[i]<=nodeRad)
             {
                  //Drawing the member
                if (firstPress == 1) {
@@ -85,11 +100,6 @@ function mousePressed(){
 
 function draw() {
     background(255);
-    
-
-   
-
-    //noLoop()
 }
 
 
