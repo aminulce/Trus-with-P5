@@ -1,25 +1,3 @@
-class Node{
-    constructor(clickX, clickY,nodeRad, fillColor) 
-    {
-        this.X = clickX;
-        this.Y = clickY;
-        this.rad = nodeRad;
-        this.fillColor = fillColor;
-    }
-
-    drawNode(){
-        fill(this.fillColor);
-        stroke(100);
-        strokeWeight(1);
-        ellipse(this.X, this.Y, this.rad*2);
-    }
-
-    checkDistance(x,y){
-        return(dist(x, y,this.X,this.Y));
-    }
-
-}
-var  loadInpX, loadInpY, nodeOption, supportOptions, memberOptions;
 function radioChilds()
 {
 
@@ -70,21 +48,22 @@ function radioChilds()
         memberOption.remove();
     }*/
 }
-function preload() {
-    img = loadImage('kiwi.svg');
-}
-var nodeCount = 0;
-var canvas, canvasW = 500, canvasH = 500, X, Y, nodeRad = 5;
-var nodes = [], members = [], nodeCoords = [], memberCoords = [];
-var sliderVal;
-var radio;
-let N,num; //num is recording the key pressed value
-var input;
-function setup() {
-    canvas = createCanvas(canvasW,canvasH);
-    background(255);
-    canvas.addClass("aiP5");
+// Define variables.
+var radius = 7;
+var circles = [];//curcles object
+//var circles = [
+//	{ x: 50, y: 50, color:' #000', active: false },
+//	{ x: 150, y: 50, color: '#000', active: false },
+//	{ x: 250, y: 50, color: '#000', active: false }
+//]
 
+// Set up canvas.
+function setup() {
+  var width  = 500, height = 500;
+  // Create canvas using width/height of window.
+  var canvas = createCanvas(width, height);
+  canvas.addClass("aiP5");
+  ellipseMode(RADIUS);
     radio = createRadio("Primary");
     radio.option('Node');
     radio.option('Member');
@@ -95,26 +74,32 @@ function setup() {
     radio.addClass("drawOptions");
     radioChilds();
     radio.input(radioChilds);
-    //noLoop();
 }
-var firstPress = 1;
-var distance = [];
-var addNodePermit;
-var testObj = [];//testing json
-function mousePressed(){
-    addNodePermit = true;
-    var test = {};//testing json
-    test['x'] =mouseX; 
-    test['y'] =mouseY;
-    testObj.push(test);
-    console.log(testObj);
+
+// Draw on the canvas.
+function draw() {
+	background('#fff');
+	if (circles.length > 0) {
+		for (var i = 0; i < circles.length; i++) {
+			var circle = circles[i];
+			noStroke();
+			fill(circle.color);
+			ellipse(circle.x, circle.y, radius, radius);
+		}
+	}
+}
+
+// Run when the mouse/touch is down.
+function mousePressed() {
+    var addNodePermit = true;
+    var circleProps = {};
     if(radio.value()== "Node")
     {
         if (mouseButton=="left")
         {
             if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
             {
-                for (var i=0; i<nodes.length;i++)
+                /*for (var i=0; i<circles.length;i++)
                 {
                     distance[i]=nodes[i].checkDistance(mouseX,mouseY);
                     if(distance[i]<=nodeRad)
@@ -122,15 +107,17 @@ function mousePressed(){
                         addNodePermit = false;
                         break;
                     }
-                }
+                }*/
                 if (nodeOption.value() == "Add Node")
                 {
                     if(addNodePermit == true)
                     {
 
-                        nodeCoords[nodeCount] = [mouseX,mouseY];
-                        //nodes[nodeCount++].drawNode();
-                        nodeCount++;
+                        circleProps["x"]=mouseX;
+                        circleProps["y"]=mouseY;
+                        circleProps["color"]="#000";
+                        circleProps["active"]=false;
+                        circles.push(circleProps);
                     }
                 }
                
@@ -162,46 +149,32 @@ function mousePressed(){
             }
         }
     }
-   if(radio.value() == "Member")
-   {
-       if (mouseButton=="left")
-       {
-           for (i = 0; i<nodes.length; i++)
-           {
-                distance[i]=nodes[i].checkDistance(mouseX,mouseY);
-
-                if(distance[i]<=nodeRad)
-                {
-                    //Drawing the member
-    //                if (num==27)
-    //                    firstPress = 1;
-                    if (firstPress == 1) {
-                        firstPress = 0;
-                        x0 = nodes[i].X;
-                        y0 = nodes[i].Y;
-                    }
-                    else if (firstPress == 0 && num!=27) {
-                        firstPress = 1;
-                        x = nodes[i].X;
-                        y = nodes[i].Y;
-                        memberCoords.push([x0, y0, x, y]);
-                    }         
-
-                }
-           }
-       }
-   }
+	if (circles.length > 0) {
+		for (var i = 0; i < circles.length; i++) {
+			var circle = circles[i],
+					distance = dist(mouseX, mouseY, circle.x, circle.y);
+			if (distance < radius) {
+				circle.active = true;
+				circle.color = '#f00';
+			} else {
+				circle.active = false;
+				circle.color = '#000';
+			}
+		}
+	}
+  // Prevent default functionality.
+  return false;
 }
+
 // Run when the mouse/touch is dragging.
 function mouseDragged() {
-	addNodePermit = true;
     if(radio.value()== "Node")
     {
         if (mouseButton=="left")
         {
             if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
             {
-                for (var i=0; i<nodes.length;i++)
+                /*for (var i=0; i<circles.length;i++)
                 {
                     distance[i]=nodes[i].checkDistance(mouseX,mouseY);
                     if(distance[i]<=nodeRad)
@@ -209,66 +182,50 @@ function mouseDragged() {
                         addNodePermit = false;
                         break;
                     }
-                }
+                }*/
                 if (nodeOption.value() == "Edit Node")
-                {                    
-                    for (var j=0; j<nodes.length;j++)
-                    {
-                        if(addNodePermit == false)
-                        {
-                            console.log("Dragging Node: "+i);
-                            nodeCoords[i][0] = mouseX;
-                            nodeCoords[i][1] = mouseY;
+                {
+                    if (circles.length > 0) {
+                        for (var i = 0; i < circles.length; i++) {
+                            var circle = circles[i];
+                            if (circle.active) {
+                                circle.x = mouseX;
+                                circle.y = mouseY;
+                                break;
+                            }
                         }
                     }
-                    console.log(mouseX," ", mouseY);
                 }
+               
+                /*if (nodeOption.value() == "Delete Node")
+                {
+                    console.log("Deleting node");
+                    for (i=0; i<nodes.length;i++)
+                    {
+                        distance[i]=nodes[i].checkDistance(mouseX,mouseY);
+                        if(distance[i]<=nodeRad)
+                        {
+                            addNodePermit = true;
+                            break;
+                        }
+                        else
+                        {                            
+                            addNodePermit = false;                          
+                        }
+                    }
+
+                    if(addNodePermit == true)
+                    {
+                        console.log(nodeCoords.length);
+                        nodeCoords.splice(i,1);
+                        nodes.splice(i,1);
+                        console.log(nodeCoords);
+                    }
+                }*/
             }
         }
     }
+	
   // Prevent default functionality.
   return false;
 }
-//function mouseReleased() {
-//  noLoop();
-//}
-//function keyPressed() {
-//}
-var els =  [], elsCount = 0;
-function draw() {
-    
-    image(img, 0, 50);
-    background(255);
-    if (radio.value()=="Node" && nodeOption.value()=="Add Node")
-        cursor(CROSS);
-    else if (radio.value()=="Member")
-    {
-        for (i = 0; i<nodes.length; i++)
-        {
-            distance[i]=nodes[i].checkDistance(mouseX,mouseY);
-            if(distance[i]<=nodeRad)
-            {
-                cursor(HAND);
-                break;
-            }
-            else if(distance[i]>=nodeRad){
-                cursor(ARROW)
-            }
-        }
-    }
-for (var i=0; i<nodeCoords.length;i++)
-{
-    nodes[i] = new Node(nodeCoords[i][0],nodeCoords[i][1],nodeRad, 180);
-    nodes[i].drawNode();
-
-}
-stroke(0);
-strokeWeight(2);
-for (var i=0; i<memberCoords.length;i++)
-{
-    line(memberCoords[i][0],memberCoords[i][1],memberCoords[i][2],memberCoords[i][3]);
-}
-    
-}
-
-
