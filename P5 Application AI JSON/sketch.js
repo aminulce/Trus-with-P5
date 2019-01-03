@@ -1,4 +1,4 @@
-var currentSelectedParent, selectedPrevParent;
+var currentSelectedParent, selectedPrevParent, supportOptions;
 function radioChilds()
 {
 
@@ -17,15 +17,15 @@ function radioChilds()
     }
     if (radio.value() == "Node")
     {
-        nodeOption = createRadio("nodeOption");
-        nodeOption.option("Add Node");
+        nodeOptions = createRadio("nodeOption");
+        nodeOptions.option("Add Node");
         //nodeOption.option("Delete Node");
-        nodeOption.option("Edit Node");
-        nodeOption._getInputChildrenArray()[0].checked = true;
+        nodeOptions.option("Edit Node");
+        nodeOptions._getInputChildrenArray()[0].checked = true;
     }
-    else if (typeof nodeOption !== "undefined")
+    else if (typeof nodeOptions !== "undefined")
     {
-        nodeOption.remove();
+        nodeOptions.remove();
     }
     if (radio.value() != "Node" && editNodeInpX)
     {
@@ -34,14 +34,14 @@ function radioChilds()
     }
     if (radio.value() == "Support")
     {
-        supportOption = createRadio("supportOptions");
-        supportOption.option("Roller");
-        supportOption.option("Hinge");
-        supportOption._getInputChildrenArray()[0].checked = true;
+        supportOptions = createRadio("supportOptions");
+        supportOptions.option("Roller");
+        supportOptions.option("Hinge");
+        supportOptions._getInputChildrenArray()[0].checked = true;
     }
     else if (typeof supportOption !== "undefined")
     {
-        supportOption.remove();
+        supportOptions.remove();
     }
     /*if (radio.value() == "Member")
     {
@@ -58,7 +58,7 @@ function radioChilds()
 var circle, editNodeInpX,editNodeInpY;
 function nodeoptionsChilds(){
     var isInside = false;
-    if (nodeOption.value() == "Edit Node")
+    if (nodeOptions.value() == "Edit Node")
     {
         if (circles.length > 0) {
             if (mouseIsPressed){
@@ -74,23 +74,21 @@ function nodeoptionsChilds(){
                 }
             }
         }
-//        if (isInside){
-//            if (editNodeInpX){
-//                editNodeInpX.remove();
-//                editNodeInpY.remove();
-//                editNodeInpX = createInput();
-//                editNodeInpX.attribute('value', String(circle.x));
-//                editNodeInpY = createInput(String(500-circle.y));//500 is the height of the canvas. circle y is ssubtracted from 500 to emitate the actual coordinate system where origin is located at the bottom left corner.
-//            }else if (typeof editNodeInpX === "undefined"){
-//                editNodeInpX = createInput(String(circle.x));
-//                editNodeInpY = createInput(String(circle.y));
-//            }
-//        }
     }
-//    else if (typeof loadInpX !== "undefined"){
-//        loadInpX.remove();
-//        loadInpY.remove();
-//    }
+}//End of nodeOptionChilds
+var rollers = [];
+function drawRoller(x,y){
+    stroke('#000');
+    strokeWeight(3);
+    var roller = {};
+    roller['line1']=[x,y,x+15,y+15];
+    roller['line2']=[x,y,x-15,y+15];
+    roller['line3']=[x-15,y+15,x+15,y+15];
+    roller['circle1']=[x-14,y+19,4];
+    roller['circle2']=[x+14,y+19,4];
+    roller['circle3']=[x,y+19,4];
+    rollers.push(roller);
+    console.log(rollers)
 }
 // Define variables.
 var radius = 7;
@@ -121,14 +119,14 @@ function setup() {
     radioChilds();
     radio.input(radioChilds);
     
-}
+}//End of setup function
 
 // Draw on the canvas.
 function draw() {
 	background('#fff');
-    stroke('#a5a5a5');
-    line(20,0,20,500);
-    if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
+    //stroke('#a5a5a5');
+    //line(20,0,20,500);
+    if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
             {
                 if(radio.value()=="Node")
                                 cursor(CROSS);
@@ -167,12 +165,24 @@ function draw() {
             //text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
 		}
 	}
-    //line(0,0,250,250);
-}
+    if(rollers.length>0){
+        for (i=0;i<rollers.length;i++){
+            var roller = rollers[i];
+            stroke(0);
+            strokeWeight(3);
+            line(roller.line1[0],roller.line1[1],roller.line1[2],roller.line1[3]);
+            line(roller.line2[0],roller.line2[1],roller.line2[2],roller.line2[3]);
+            line(roller.line3[0],roller.line3[1],roller.line3[2],roller.line3[3]);
+            ellipse(roller.circle1[0],roller.circle1[1],roller.circle1[2],roller.circle1[2]);
+            ellipse(roller.circle2[0],roller.circle2[1],roller.circle2[2],roller.circle2[2]);
+            ellipse(roller.circle3[0],roller.circle3[1],roller.circle3[2],roller.circle3[2]);
+        }
+    }
+}//End of Draw function
 var firstPress = 1, lineStart, lineEnd;
 // Run when the mouse/touch is down.
 function mousePressed() {
-    if (nodeOption.value()=="Edit Node")
+    if (nodeOptions.value()=="Edit Node")
         if (mouseButton=="left")
             nodeoptionsChilds();
     for (i = 0; i < circles.length; i++) {
@@ -186,7 +196,7 @@ function mousePressed() {
     {
         if (mouseButton=="left")
         {
-            if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
+            if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
             {
                 if (circles.length > 0) {
                     for (i = 0; i < circles.length; i++) {
@@ -204,7 +214,7 @@ function mousePressed() {
                         }
                     }
                 }
-                if (nodeOption.value() == "Add Node")
+                if (nodeOptions.value() == "Add Node")
                 {
                     if(addNodePermit == true)
                     {
@@ -215,32 +225,7 @@ function mousePressed() {
                         circles.push(circleProps);
                     }
                 }
-               
-                /*if (nodeOption.value() == "Delete Node")
-                {
-                    console.log("Deleting node");
-                    for (i=0; i<nodes.length;i++)
-                    {
-                        distance[i]=nodes[i].checkDistance(mouseX,mouseY);
-                        if(distance[i]<=nodeRad)
-                        {
-                            addNodePermit = true;
-                            break;
-                        }
-                        else
-                        {                            
-                            addNodePermit = false;                          
-                        }
-                    }
 
-                    if(addNodePermit == true)
-                    {
-                        console.log(nodeCoords.length);
-                        nodeCoords.splice(i,1);
-                        nodes.splice(i,1);
-                        console.log(nodeCoords);
-                    }
-                }*/
             }
         }
     }
@@ -256,9 +241,6 @@ function mousePressed() {
 
                 if(distance<=radius*2)
                 { 
-                    //Drawing the member
-    //                if (num==27)
-    //                    firstPress = 1;
                     if (firstPress == 1) {
                         firstPress = 0;//This makes sure that first point is clicked and is ready for the next point
                         lineStart = i;
@@ -279,14 +261,19 @@ function mousePressed() {
                             members.push(memberProps);                            
                         }
                     }
-                    console.log(memberProps);
                     break;
                 }
                //else firstPress = 1;
            }
        }
     }
-	
+	if(radio.value()=="Support")
+        if (supportOptions.value()=="Roller"){
+            drawRoller(mouseX,mouseY);
+        }
+        else if (supportOptions.value()=="Hinge"){
+            console.log("Adding Hinge");
+        }   
   // Prevent default functionality.
   return false;
 }//End of mousePressed()
@@ -309,7 +296,7 @@ function mouseDragged() {
     {
         if (mouseButton=="left")
         {
-            if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
+            if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
             {
                 /*for (var i=0; i<circles.length;i++)
                 {
@@ -320,7 +307,7 @@ function mouseDragged() {
                         break;
                     }
                 }*/
-                if (nodeOption.value() == "Edit Node")
+                if (nodeOptions.value() == "Edit Node")
                 {
                     if (circles.length > 0) {
                         for (var i = 0; i < circles.length; i++) {
@@ -333,32 +320,6 @@ function mouseDragged() {
                         }
                     }
                 }
-               
-                /*if (nodeOption.value() == "Delete Node")
-                {
-                    console.log("Deleting node");
-                    for (i=0; i<nodes.length;i++)
-                    {
-                        distance[i]=nodes[i].checkDistance(mouseX,mouseY);
-                        if(distance[i]<=nodeRad)
-                        {
-                            addNodePermit = true;
-                            break;
-                        }
-                        else
-                        {                            
-                            addNodePermit = false;                          
-                        }
-                    }
-
-                    if(addNodePermit == true)
-                    {
-                        console.log(nodeCoords.length);
-                        nodeCoords.splice(i,1);
-                        nodes.splice(i,1);
-                        console.log(nodeCoords);
-                    }
-                }*/
             }
         }
     }
