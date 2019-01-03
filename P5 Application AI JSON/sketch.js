@@ -94,7 +94,7 @@ function nodeoptionsChilds(){
 }
 // Define variables.
 var radius = 7;
-var circles = [];//curcles object
+var circles = [], members = [];//curcles object
 //var circles = [
 //	{ x: 50, y: 50, color:' #000', active: false },
 //	{ x: 150, y: 50, color: '#000', active: false },
@@ -126,7 +126,27 @@ function setup() {
 // Draw on the canvas.
 function draw() {
 	background('#fff');
-    
+    if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
+            {
+                if(radio.value()=="Node")
+                                cursor(CROSS);
+                if (circles.length > 0) {
+                    for (i = 0; i < circles.length; i++) {
+                        var circle = circles[i],
+                                distance = dist(mouseX, mouseY, circle.x, circle.y);
+                                                    
+                            if (radio.value()=="Member"){
+                                if (distance <= radius*2){
+                                    cursor(HAND);
+                                    break;
+                                } //radius*2 for getting rid of overlapping of nodes
+                                else
+                                    cursor(ARROW);
+                            
+                        }
+                    }
+                }
+            }
    	if (circles.length > 0) {
 		for (var i = 0; i < circles.length; i++) {
 			var circle = circles[i];
@@ -136,9 +156,18 @@ function draw() {
             text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
 		}
 	}
-    line(250,0,250,500);
+    if (members.length > 0) {
+		for (i = 0; i < members.length; i++) {
+			var member = members[i];
+            stroke(member.color);
+            strokeWeight(member.strokeWeight);
+			line(member.x1, member.y1, member.x2, member.y2);
+            //text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
+		}
+	}
+    //line(0,0,250,250);
 }
-
+var firstPress = 1, x1, y1, x2, y2;
 // Run when the mouse/touch is down.
 function mousePressed() {
     if (nodeOption.value()=="Edit Node")
@@ -150,7 +179,7 @@ function mousePressed() {
     }
     var addNodePermit = true;
     
-    var circleProps = {};
+    var circleProps = {}, memberProps = {};
     if(radio.value()== "Node")
     {
         if (mouseButton=="left")
@@ -217,28 +246,45 @@ function mousePressed() {
     {
        if (mouseButton=="left")
        {
-           for (i = 0; i<nodes.length; i++)
+           var circle,  distance;
+           for (i = 0; i<circles.length; i++)
            {
-                distance[i]=nodes[i].checkDistance(mouseX,mouseY);
+                circle = circles[i];
+                distance = dist(mouseX, mouseY, circle.x, circle.y);
 
-                if(distance[i]<=nodeRad)
-                {
+                if(distance<=radius*2)
+                { 
                     //Drawing the member
     //                if (num==27)
     //                    firstPress = 1;
                     if (firstPress == 1) {
-                        firstPress = 0;
-                        x0 = nodes[i].X;
-                        y0 = nodes[i].Y;
+                        firstPress = 0;//This makes sure that first point is clicked and is ready for the next point
+                        x1=circle.x;
+                        y1=circle.y;
+                        circle.active = true
+                        circle.color = '#f00';
                     }
-                    else if (firstPress == 0 && num!=27) {
-                        firstPress = 1;
-                        x = nodes[i].X;
-                        y = nodes[i].Y;
-                        memberCoords.push([x0, y0, x, y]);
-                    }         
-
+                    else if (firstPress == 0) {
+                        firstPress = 1;//This makes sure that second point is clicked.
+                        x2=circle.x;
+                        y2=circle.y;
+                        circle.active = true;
+                        circle.color = '#f00';
+                        if (x1-x2!=0 && y1-y2!=0) //If the first point is clicked twice than the line will be cancelled and the process needs to be repeated
+                        {
+                            memberProps['x1']=x1;
+                            memberProps['x2']=x2;
+                            memberProps['y1']=y1;
+                            memberProps['y2']=y2;
+                            memberProps['strokeWeight']=2;
+                            memberProps['color']='#000';
+                            members.push(memberProps);                            
+                        }
+                    }
+                    console.log(memberProps);
+                    break;
                 }
+               //else firstPress = 1;
            }
        }
     }
