@@ -126,6 +126,8 @@ function setup() {
 // Draw on the canvas.
 function draw() {
 	background('#fff');
+    stroke('#a5a5a5');
+    line(20,0,20,500);
     if(mouseX>0 && mouseX<500 && mouseY>0 && mouseY<500)
             {
                 if(radio.value()=="Node")
@@ -161,13 +163,13 @@ function draw() {
 			var member = members[i];
             stroke(member.color);
             strokeWeight(member.strokeWeight);
-			line(member.x1, member.y1, member.x2, member.y2);
+			line(circles[member.lineStart].x, circles[member.lineStart].y, circles[member.lineEnd].x, circles[member.lineEnd].y);
             //text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
 		}
 	}
     //line(0,0,250,250);
 }
-var firstPress = 1, x1, y1, x2, y2;
+var firstPress = 1, lineStart, lineEnd;
 // Run when the mouse/touch is down.
 function mousePressed() {
     if (nodeOption.value()=="Edit Node")
@@ -259,23 +261,19 @@ function mousePressed() {
     //                    firstPress = 1;
                     if (firstPress == 1) {
                         firstPress = 0;//This makes sure that first point is clicked and is ready for the next point
-                        x1=circle.x;
-                        y1=circle.y;
+                        lineStart = i;
                         circle.active = true
                         circle.color = '#f00';
                     }
                     else if (firstPress == 0) {
                         firstPress = 1;//This makes sure that second point is clicked.
-                        x2=circle.x;
-                        y2=circle.y;
+                        lineEnd = i;
                         circle.active = true;
                         circle.color = '#f00';
-                        if (x1-x2!=0 && y1-y2!=0) //If the first point is clicked twice than the line will be cancelled and the process needs to be repeated
+                        if (circles[lineEnd].x-circles[lineStart].x!=0 && circles[lineEnd].y-circles[lineStart].y!=0) //If the first point is clicked twice than the line will be cancelled and the process needs to be repeated
                         {
-                            memberProps['x1']=x1;
-                            memberProps['x2']=x2;
-                            memberProps['y1']=y1;
-                            memberProps['y2']=y2;
+                            memberProps['lineStart']=lineStart;
+                            memberProps['lineEnd']=lineEnd;
                             memberProps['strokeWeight']=2;
                             memberProps['color']='#000';
                             members.push(memberProps);                            
