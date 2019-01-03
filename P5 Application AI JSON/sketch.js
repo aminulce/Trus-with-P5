@@ -1,4 +1,4 @@
-var currentSelectedParent, selectedPrevParent, supportOptions;
+var currentSelectedParent, selectedPrevParent, supportOptions, supportOptionsRollerOptions;
 function radioChilds()
 {
 
@@ -37,23 +37,15 @@ function radioChilds()
         supportOptions = createRadio("supportOptions");
         supportOptions.option("Roller");
         supportOptions.option("Hinge");
+        supportOptions.option("Delete Support");
         supportOptions._getInputChildrenArray()[0].checked = true;
+        supportOptionsChilds();
+        supportOptions.input(supportOptionsChilds);
     }
-    else if (typeof supportOption !== "undefined")
+    else if (typeof supportOptions !== "undefined")
     {
         supportOptions.remove();
     }
-    /*if (radio.value() == "Member")
-    {
-        memberOption = createRadio("memberOptions");
-        memberOption.option("Add Member");
-        memberOption.option("Delete Memner");
-        memberOption._getInputChildrenArray()[0].checked = true;
-    }
-    else if (typeof memberOption !== "undefined")
-    {
-        memberOption.remove();
-    }*/
 }
 var circle, editNodeInpX,editNodeInpY;
 function nodeoptionsChilds(){
@@ -76,19 +68,31 @@ function nodeoptionsChilds(){
         }
     }
 }//End of nodeOptionChilds
+
 var rollers = [];
-function drawRoller(x,y){
-    stroke('#000');
-    strokeWeight(3);
-    var roller = {};
-    roller['line1']=[x,y,x+15,y+15];
-    roller['line2']=[x,y,x-15,y+15];
-    roller['line3']=[x-15,y+15,x+15,y+15];
-    roller['circle1']=[x-14,y+19,4];
-    roller['circle2']=[x+14,y+19,4];
-    roller['circle3']=[x,y+19,4];
-    rollers.push(roller);
-    console.log(rollers)
+function drawSupportAt(i,supportType,extraInfo){
+    if (supportType=="Roller")
+    {
+        circles[i].support = 'Roller';
+        if(extraInfo=="Restrained in Y")
+        {
+            circles[i].DOF = 2;
+        }else if(extraInfo=="Restrained in X")
+        {
+            circles[i].DOF = 1;
+        }
+    }
+    else if (supportType=="Hinge")
+    {
+        circles[i].support = 'Hinge';
+        circles[i].DOF = extraInfo;
+    }
+    else if (supportType=="Delete Support")
+    {
+        circles[i].support = 'None';
+        circles[i].DOF = extraInfo;
+    }
+console.log(circles);
 }
 // Define variables.
 var radius = 7;
@@ -98,10 +102,21 @@ var circles = [], members = [];//curcles object
 //	{ x: 150, y: 50, color: '#000', active: false },
 //	{ x: 250, y: 50, color: '#000', active: false }
 //]
-
+function supportOptionsChilds(){
+    if (supportOptions.value()=="Roller")
+    {
+        supportOptionsRollerOptions = createRadio('supportOptionsRollerOptions');
+        supportOptionsRollerOptions.option('Restrained in Y');
+        supportOptionsRollerOptions.option('Restrained in X');
+        supportOptionsRollerOptions._getInputChildrenArray()[0].checked = true;
+    }
+    else if (supportOptions.value()!="Roller" && supportOptionsRollerOptions)
+    {
+        supportOptionsRollerOptions.remove();
+    }
+}
 // Set up canvas.
 function setup() {
-  createInput();
   var width  = 500, height = 500;
   // Create canvas using width/height of window.
   var canvas = createCanvas(width, height);
@@ -118,6 +133,8 @@ function setup() {
     radio.addClass("drawOptions");
     radioChilds();
     radio.input(radioChilds);
+    if (radio.value()=='Support')
+    supportOptions.input(supportOptionsChilds);
     
 }//End of setup function
 
@@ -153,7 +170,42 @@ function draw() {
 			noStroke();
 			fill(circle.color);
 			ellipse(circle.x, circle.y, radius, radius);
-            text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
+            text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10);
+            if(circle.support=="Roller")
+            {
+                stroke(0);
+                strokeWeight(3);
+                fill(255);
+                if(circle.DOF==2)
+                {
+                    line(circle.x,circle.y,circle.x+15,circle.y+15);
+                    line(circle.x,circle.y,circle.x-15,circle.y+15);
+                    line(circle.x-15,circle.y+15,circle.x+15,circle.y+15);
+                    ellipse(circle.x-14,circle.y+19,4,4);
+                    ellipse(circle.x,circle.y+19,4,4);
+                    ellipse(circle.x+14,circle.y+19,4,4);
+                }else if(circle.DOF==1)
+                {
+                    line(circle.x,circle.y,circle.x+15,circle.y+15);
+                    line(circle.x,circle.y,circle.x+15,circle.y-15);
+                    line(circle.x+15,circle.y+15,circle.x+15,circle.y-15);
+                    ellipse(circle.x+19,circle.y-14,4,4);
+                    ellipse(circle.x+19,circle.y,4,4);
+                    ellipse(circle.x+19,circle.y+14,4,4);
+                }
+            }
+            else if(circle.support=="Hinge")
+            {
+                var l = 5;//controls the length of the botton array of lines in hinges
+                stroke(0);
+                strokeWeight(3);
+                fill(255);
+                line(circle.x,circle.y,circle.x+15,circle.y+15);
+                line(circle.x,circle.y,circle.x-15,circle.y+15);
+                line(circle.x-15,circle.y+15,circle.x+15,circle.y+15);
+                for (var ll = 0; ll<5; ll++)
+                line(circle.x-15+ll*7.5,circle.y+15,circle.x-15-l+ll*7.5,circle.y+15+l);                
+            }
 		}
 	}
     if (members.length > 0) {
@@ -165,19 +217,7 @@ function draw() {
             //text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
 		}
 	}
-    if(rollers.length>0){
-        for (i=0;i<rollers.length;i++){
-            var roller = rollers[i];
-            stroke(0);
-            strokeWeight(3);
-            line(roller.line1[0],roller.line1[1],roller.line1[2],roller.line1[3]);
-            line(roller.line2[0],roller.line2[1],roller.line2[2],roller.line2[3]);
-            line(roller.line3[0],roller.line3[1],roller.line3[2],roller.line3[3]);
-            ellipse(roller.circle1[0],roller.circle1[1],roller.circle1[2],roller.circle1[2]);
-            ellipse(roller.circle2[0],roller.circle2[1],roller.circle2[2],roller.circle2[2]);
-            ellipse(roller.circle3[0],roller.circle3[1],roller.circle3[2],roller.circle3[2]);
-        }
-    }
+
 }//End of Draw function
 var firstPress = 1, lineStart, lineEnd;
 // Run when the mouse/touch is down.
@@ -222,6 +262,8 @@ function mousePressed() {
                         circleProps["y"]=roundVal(mouseY);
                         circleProps["color"]="#000";
                         circleProps["active"]=false;
+                        circleProps["support"]='none';
+                        circleProps["DOF"]='none';
                         circles.push(circleProps);
                     }
                 }
@@ -263,17 +305,36 @@ function mousePressed() {
                     }
                     break;
                 }
-               //else firstPress = 1;
            }
        }
     }
 	if(radio.value()=="Support")
-        if (supportOptions.value()=="Roller"){
-            drawRoller(mouseX,mouseY);
+    {
+        if (mouseButton=="left")
+        {
+           var circleind,  distanceSup;
+           for (i = 0; i<circles.length; i++)
+           {
+                circleInd = i;
+                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);
+                if(distanceSup<=radius*2)
+                {
+                    if (supportOptions.value()=="Roller"){
+                        drawSupportAt(circleInd,supportOptions.value(),supportOptionsRollerOptions.value());
+                        break;
+                    }
+                    else if (supportOptions.value()=="Hinge"){
+                        drawSupportAt(circleInd,supportOptions.value(),'none');
+                        break;
+                    }
+                    else if (supportOptions.value()=="Delete Support"){
+                        drawSupportAt(circleInd,supportOptions.value(),'none');
+                        break;
+                    }
+                }
+           }
         }
-        else if (supportOptions.value()=="Hinge"){
-            console.log("Adding Hinge");
-        }   
+    } 
   // Prevent default functionality.
   return false;
 }//End of mousePressed()
@@ -289,24 +350,12 @@ function roundVal(value){
         return Math.floor(value);
 }
 function mouseDragged() {
-//    if (nodeOption.value()=="Edit Node")
-//        if (mouseButton=="left")
-//            nodeoptionsChilds();
     if(radio.value()== "Node")
     {
         if (mouseButton=="left")
         {
             if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
             {
-                /*for (var i=0; i<circles.length;i++)
-                {
-                    distance[i]=nodes[i].checkDistance(mouseX,mouseY);
-                    if(distance[i]<=nodeRad)
-                    {
-                        addNodePermit = false;
-                        break;
-                    }
-                }*/
                 if (nodeOptions.value() == "Edit Node")
                 {
                     if (circles.length > 0) {
