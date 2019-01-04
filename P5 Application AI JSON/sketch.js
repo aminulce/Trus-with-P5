@@ -1,21 +1,19 @@
-var currentSelectedParent, selectedPrevParent, supportOptions, supportOptionsRollerOptions;
+var supportOptions, supportOptionsRollerOptions,loadOptions, loadInp;
 function radioChilds()
 {
-
-    if (radio.value() == "Load")
+    if (radio.value() == "Load")//Do these when load is selected
     {
-        selectedCurrentParent = "Load";
-        loadInpX = createInput('0');
-        loadInpY = createInput('0');
-        loadInpX.attribute('placeholder', 'Load in x direction');
-        loadInpY.attribute('placeholder', 'Load in y direction');
+        loadOptions=createRadio('loadOptions');
+        loadOptions.option("Load in X direction");
+        loadOptions.option("Load in Y direction");
+        loadOptions.option("Remove Load");
+        loadOptions._getInputChildrenArray()[0].checked = true;
     }
-    else if (typeof loadInpX !== "undefined")
+    else if (typeof loadOptions !== "undefined")
     {
-        loadInpX.remove();
-        loadInpY.remove();
+        loadOptions.remove();
     }
-    if (radio.value() == "Node")
+    if (radio.value() == "Node")//Do these when node is selected
     {
         nodeOptions = createRadio("nodeOption");
         nodeOptions.option("Add Node");
@@ -32,7 +30,7 @@ function radioChilds()
         editNodeInpX.remove();
         editNodeInpY.remove();
     }
-    if (radio.value() == "Support")
+    if (radio.value() == "Support")//Do these when support is selected
     {
         supportOptions = createRadio("supportOptions");
         supportOptions.option("Roller");
@@ -45,6 +43,7 @@ function radioChilds()
     else if (typeof supportOptions !== "undefined")
     {
         supportOptions.remove();
+        supportOptionsRollerOptions.remove();
     }
 }
 var circle, editNodeInpX,editNodeInpY;
@@ -69,7 +68,6 @@ function nodeoptionsChilds(){
     }
 }//End of nodeOptionChilds
 
-var rollers = [];
 function drawSupportAt(i,supportType,extraInfo){
     if (supportType=="Roller")
     {
@@ -92,16 +90,27 @@ function drawSupportAt(i,supportType,extraInfo){
         circles[i].support = 'None';
         circles[i].DOF = extraInfo;
     }
-console.log(circles);
+}
+function drawLoadAt(i,loadDirection,loadVal){
+    if (loadDirection==1)
+    {
+        circles[i].hasLoadInX = loadVal;
+    }
+    else if (loadDirection==2)
+    {
+        circles[i].hasLoadInY = loadVal;
+    }
+    else if (loadDirection==0)
+    {
+        circles[i].hasLoadInX = 0;
+        circles[i].hasLoadInY = 0;
+    }
+    console.log(circles);
 }
 // Define variables.
 var radius = 7;
 var circles = [], members = [];//curcles object
-//var circles = [
-//	{ x: 50, y: 50, color:' #000', active: false },
-//	{ x: 150, y: 50, color: '#000', active: false },
-//	{ x: 250, y: 50, color: '#000', active: false }
-//]
+
 function supportOptionsChilds(){
     if (supportOptions.value()=="Roller")
     {
@@ -144,26 +153,26 @@ function draw() {
     //stroke('#a5a5a5');
     //line(20,0,20,500);
     if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
-            {
-                if(radio.value()=="Node")
-                                cursor(CROSS);
-                if (circles.length > 0) {
-                    for (i = 0; i < circles.length; i++) {
-                        var circle = circles[i],
-                                distance = dist(mouseX, mouseY, circle.x, circle.y);
-                                                    
-                            if (radio.value()=="Member"){
-                                if (distance <= radius*2){
-                                    cursor(HAND);
-                                    break;
-                                } //radius*2 for getting rid of overlapping of nodes
-                                else
-                                    cursor(ARROW);
-                            
-                        }
-                    }
+    {
+        if(radio.value()=="Node")
+            cursor(CROSS);
+        if (circles.length > 0) {
+            for (i = 0; i < circles.length; i++) {
+                var circle = circles[i],
+                        distance = dist(mouseX, mouseY, circle.x, circle.y);
+
+                    if (radio.value()=="Member"){
+                        if (distance <= radius*2){
+                            cursor(HAND);
+                            break;
+                        } //radius*2 for getting rid of overlapping of nodes
+                        else
+                            cursor(ARROW);
+
                 }
             }
+        }
+    }
    	if (circles.length > 0) {
 		for (var i = 0; i < circles.length; i++) {
 			var circle = circles[i];
@@ -205,6 +214,22 @@ function draw() {
                 line(circle.x-15,circle.y+15,circle.x+15,circle.y+15);
                 for (var ll = 0; ll<5; ll++)
                 line(circle.x-15+ll*7.5,circle.y+15,circle.x-15-l+ll*7.5,circle.y+15+l);                
+            }
+            circle.hasLoadInX;
+            if (circle.hasLoadInX!=0 || circle.hasLoadInY!=0){
+                if (circle.hasLoadInX>0){
+                    stroke('#429bf4');
+                    strokeWeight(3);
+                    line(circle.x,circle.y,circle.x-13,circle.y-8);
+                    line(circle.x,circle.y,circle.x-13,circle.y+8);
+                    line(circle.x,circle.y,circle.x-30,circle.y);
+                }if (circle.hasLoadInX<0){
+                    stroke('#429bf4');
+                    strokeWeight(3);
+                    line(circle.x,circle.y,circle.x+13,circle.y-8);
+                    line(circle.x,circle.y,circle.x+13,circle.y+8);
+                    line(circle.x,circle.y,circle.x+30,circle.y);
+                }
             }
 		}
 	}
@@ -264,6 +289,8 @@ function mousePressed() {
                         circleProps["active"]=false;
                         circleProps["support"]='none';
                         circleProps["DOF"]='none';
+                        circleProps["hasLoadInX"]=0;
+                        circleProps["hasLoadInY"]=0;
                         circles.push(circleProps);
                     }
                 }
@@ -324,11 +351,38 @@ function mousePressed() {
                         break;
                     }
                     else if (supportOptions.value()=="Hinge"){
-                        drawSupportAt(circleInd,supportOptions.value(),'none');
+                        drawSupportAt(circleInd,supportOptions.value(),[1,2]);
                         break;
                     }
                     else if (supportOptions.value()=="Delete Support"){
                         drawSupportAt(circleInd,supportOptions.value(),'none');
+                        break;
+                    }
+                }
+           }
+        }
+    } 
+    if(radio.value()=="Load")
+    {
+        if (mouseButton=="left")
+        {
+           var circleind,  distanceSup;
+           for (i = 0; i<circles.length; i++)
+           {
+                circleInd = i;
+                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);
+                if(distanceSup<=radius*2)
+                {
+                    if (loadOptions.value()=="Load in X direction"){
+                        drawLoadAt(i,1,-20);
+                        break;
+                    }
+                    else if (loadOptions.value()=="Load in Y direction"){
+                        drawLoadAt(i,2,20);
+                        break;
+                    }
+                    else if (loadOptions.value()=="Remove Load"){
+                        drawLoadAt(i,0,0);//for removing load the last argument is dummy. which means it is not being used.
                         break;
                     }
                 }
