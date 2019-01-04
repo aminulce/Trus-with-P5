@@ -1,4 +1,4 @@
-var supportOptions, supportOptionsRollerOptions,loadOptions, loadInp;
+var supportOptions, supportOptionsRollerOptions,loadOptions, loadInp, hasLoadInp = 0,editNodeInpX,editNodeInpY,out;
 function radioChilds()
 {
     if (radio.value() == "Load")//Do these when load is selected
@@ -8,10 +8,17 @@ function radioChilds()
         loadOptions.option("Load in Y direction");
         loadOptions.option("Remove Load");
         loadOptions._getInputChildrenArray()[0].checked = true;
+        loadOptionChilds();
+        loadOptions.input(loadOptionChilds);
+
     }
     else if (typeof loadOptions !== "undefined")
     {
         loadOptions.remove();
+        if(hasLoadInp){
+            loadInp.remove();
+            hasLoadInp = 0;
+        }
     }
     if (radio.value() == "Node")//Do these when node is selected
     {
@@ -20,6 +27,7 @@ function radioChilds()
         //nodeOption.option("Delete Node");
         nodeOptions.option("Edit Node");
         nodeOptions._getInputChildrenArray()[0].checked = true;
+        nodeOptions.input(nodeOptionChilds);
     }
     else if (typeof nodeOptions !== "undefined")
     {
@@ -47,22 +55,20 @@ function radioChilds()
     }
 }
 var circle, editNodeInpX,editNodeInpY;
-function nodeoptionsChilds(){
-    var isInside = false;
-    if (nodeOptions.value() == "Edit Node")
-    {
-        if (circles.length > 0) {
-            if (mouseIsPressed){
-                for (var i = 0; i < circles.length; i++) {
-                    circle = circles[i],
-                            distance = dist(mouseX, mouseY, circle.x, circle.y);
-                    if (distance <= radius*2) {//radius*2 for getting rid of overlapping of nodes
-                        isInside = true;
-                        break;
-                    } else {
-                        isInside = false;
-                    }
-                }
+function nodeClicked(){
+    if (circles.length > 0) {
+        for (var i = 0; i < circles.length; i++) {
+            circle = circles[i],
+                    distance = dist(mouseX, mouseY, circle.x, circle.y);
+            if (distance <= radius*2) {//radius*2 for getting rid of overlapping of nodes
+                isInside = true;
+                circle.active = true;
+                circle.color = '#f00';
+                break;
+            } else {
+                circle.active = false;
+                circle.color = '#000';
+                isInside = false;
             }
         }
     }
@@ -74,10 +80,16 @@ function drawSupportAt(i,supportType,extraInfo){
         circles[i].support = 'Roller';
         if(extraInfo=="Restrained in Y")
         {
-            circles[i].DOF = 2;
+            if (circles[i].hasLoadInY)
+                alert('Consider removing the load in Y direction');
+            else
+                circles[i].DOF = 2;
         }else if(extraInfo=="Restrained in X")
         {
-            circles[i].DOF = 1;
+            if (circles[i].hasLoadInX)
+                alert('Consider removing the load in X direction');
+            else
+                circles[i].DOF = 1;
         }
     }
     else if (supportType=="Hinge")
@@ -87,17 +99,31 @@ function drawSupportAt(i,supportType,extraInfo){
     }
     else if (supportType=="Delete Support")
     {
-        circles[i].support = 'None';
+        circles[i].support = 'none';
         circles[i].DOF = extraInfo;
     }
 }
 function drawLoadAt(i,loadDirection,loadVal){
     if (loadDirection==1)
     {
-        circles[i].hasLoadInX = loadVal;
+        if (circles[i].support =='Roller'){
+            if(circles[i].DOF ==1)
+                alert('Consider removing the Roller support along X direction');
+        } else if (circles[i].support =='Hinge'){
+            if(circles[i].DOF ==1)
+                alert('Consider removing the Hinge Support');
+        }else
+            circles[i].hasLoadInX = loadVal;
     }
     else if (loadDirection==2)
     {
+        if (circles[i].support =='Roller'){
+            if(circles[i].DOF ==2)
+                alert('Consider removing the Roller support along Y direction');
+        } else if (circles[i].support =='Hinge'){
+            if(circles[i].DOF ==1)
+                alert('Consider removing the Hinge Support');
+        }else
         circles[i].hasLoadInY = loadVal;
     }
     else if (loadDirection==0)
@@ -105,12 +131,20 @@ function drawLoadAt(i,loadDirection,loadVal){
         circles[i].hasLoadInX = 0;
         circles[i].hasLoadInY = 0;
     }
-    console.log(circles);
 }
 // Define variables.
 var radius = 7;
 var circles = [], members = [];//curcles object
-
+function nodeOptionChilds(){
+    if(nodeOptions.value()=='Edit Node'){
+//        editNodeInpX = createInput();
+//        editNodeInpY = createInput();
+    }
+    else if(editNodeInpX){
+        editNodeInpX.remove();
+        editNodeInpY.remove();
+    }
+}
 function supportOptionsChilds(){
     if (supportOptions.value()=="Roller")
     {
@@ -124,13 +158,41 @@ function supportOptionsChilds(){
         supportOptionsRollerOptions.remove();
     }
 }
+
+function createLoadInp(option){
+    if (option=="Load in X direction"||option=="Load in Y direction"){
+        if (hasLoadInp == 0){
+            loadInp = createInput();
+            hasLoadInp = 1;
+        }
+    }
+    else if (hasLoadInp){
+        loadInp.remove();
+        hasLoadInp=0;
+    }
+}
+function loadOptionChilds(){
+    createLoadInp(loadOptions.value())
+}
+function calculate(){
+    if(circles.length>2)
+    {
+        
+    }
+    else
+        alert('At least three nodes required');
+    
+}
+function calcLength(s,e){//s=start, e=end
+    return dist(circles[s].x,circles[s].y,circles[e].x,circles[e].y);
+}
 // Set up canvas.
+var button;
 function setup() {
-  var width  = 500, height = 500;
+  var width  = 500, height = 500;//height and with of canvas
   // Create canvas using width/height of window.
   var canvas = createCanvas(width, height);
   canvas.addClass("aiP5");
-    
   ellipseMode(RADIUS);
     radio = createRadio("Primary");
     radio.option('Node');
@@ -142,16 +204,15 @@ function setup() {
     radio.addClass("drawOptions");
     radioChilds();
     radio.input(radioChilds);
-    if (radio.value()=='Support')
-    supportOptions.input(supportOptionsChilds);
-    
+    button = createButton('Calculate');
+    button.attribute('disabled');
+    button.mousePressed(calculate);
 }//End of setup function
-
+var centerX, centerY;
 // Draw on the canvas.
 function draw() {
+    cursor(ARROW);
 	background('#fff');
-    //stroke('#a5a5a5');
-    //line(20,0,20,500);
     if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
     {
         if(radio.value()=="Node")
@@ -161,13 +222,12 @@ function draw() {
                 var circle = circles[i],
                         distance = dist(mouseX, mouseY, circle.x, circle.y);
 
-                    if (radio.value()=="Member"){
+                    if (radio.value()!="Node"){
                         if (distance <= radius*2){
                             cursor(HAND);
                             break;
                         } //radius*2 for getting rid of overlapping of nodes
-                        else
-                            cursor(ARROW);
+
 
                 }
             }
@@ -213,22 +273,42 @@ function draw() {
                 line(circle.x,circle.y,circle.x-15,circle.y+15);
                 line(circle.x-15,circle.y+15,circle.x+15,circle.y+15);
                 for (var ll = 0; ll<5; ll++)
-                line(circle.x-15+ll*7.5,circle.y+15,circle.x-15-l+ll*7.5,circle.y+15+l);                
+                    line(circle.x-15+ll*7.5,circle.y+15,circle.x-15-l+ll*7.5,circle.y+15+l);                
             }
             circle.hasLoadInX;
             if (circle.hasLoadInX!=0 || circle.hasLoadInY!=0){
-                if (circle.hasLoadInX>0){
+                if (circle.hasLoadInX>0){//load in positive X direction
                     stroke('#429bf4');
                     strokeWeight(3);
                     line(circle.x,circle.y,circle.x-13,circle.y-8);
                     line(circle.x,circle.y,circle.x-13,circle.y+8);
                     line(circle.x,circle.y,circle.x-30,circle.y);
-                }if (circle.hasLoadInX<0){
+                    noStroke();
+                    text(circle.hasLoadInX, circle.x-30,circle.y-10);
+                }if (circle.hasLoadInX<0){//load in negative X direction
                     stroke('#429bf4');
                     strokeWeight(3);
                     line(circle.x,circle.y,circle.x+13,circle.y-8);
                     line(circle.x,circle.y,circle.x+13,circle.y+8);
                     line(circle.x,circle.y,circle.x+30,circle.y);
+                    noStroke();
+                    text(circle.hasLoadInX, circle.x+30,circle.y-10);
+                }if (circle.hasLoadInY<0){//load in positive Y direction
+                    stroke('#429bf4');
+                    strokeWeight(3);
+                    line(circle.x,circle.y,circle.x+8,circle.y-13);
+                    line(circle.x,circle.y,circle.x-8,circle.y-13);
+                    line(circle.x,circle.y,circle.x,circle.y-30);
+                    noStroke();
+                    text(circle.hasLoadInY, circle.x+5,circle.y-30);
+                }if (circle.hasLoadInY>0){//load in negative Y direction
+                    stroke('#429bf4');
+                    strokeWeight(3);
+                    line(circle.x,circle.y,circle.x+8,circle.y+13);
+                    line(circle.x,circle.y,circle.x-8,circle.y+13);
+                    line(circle.x,circle.y,circle.x,circle.y+30);
+                    noStroke();
+                    text(circle.hasLoadInY, circle.x+5,circle.y+30);
                 }
             }
 		}
@@ -239,7 +319,17 @@ function draw() {
             stroke(member.color);
             strokeWeight(member.strokeWeight);
 			line(circles[member.lineStart].x, circles[member.lineStart].y, circles[member.lineEnd].x, circles[member.lineEnd].y);
-            //text("("+String(circle.x)+", "+String(circle.y)+")",circle.x+10,circle.y+10)
+            member.length=calcLength(member.lineStart,member.lineEnd);
+            centerX = (circles[member.lineStart].x+circles[member.lineEnd].x)/2;
+            centerY = (circles[member.lineStart].y+circles[member.lineEnd].y)/2;
+            noStroke();
+            var w = textWidth(String(Math.round(parseFloat(member.length)*100)/100));
+            fill('#f4f4f4');
+            stroke(0);
+            rect(centerX-5, centerY-15, w+10, 20);
+            noStroke();
+            fill(0);
+            text(String(Math.round(parseFloat(member.length)*100)/100),centerX,centerY);
 		}
 	}
 
@@ -247,12 +337,12 @@ function draw() {
 var firstPress = 1, lineStart, lineEnd;
 // Run when the mouse/touch is down.
 function mousePressed() {
-    if (nodeOptions.value()=="Edit Node")
-        if (mouseButton=="left")
-            nodeoptionsChilds();
     for (i = 0; i < circles.length; i++) {
         circles[i].active=false;
         circles[i].color = '#000';
+    }
+    if (mouseButton=="left"){
+        nodeClicked();            
     }
     var addNodePermit = true;
     
@@ -268,13 +358,9 @@ function mousePressed() {
                         var circle = circles[i],
                                 distance = dist(mouseX, mouseY, circle.x, circle.y);
                         if (distance <= radius*2) {//radius*2 for getting rid of overlapping of nodes
-                            circle.active = true;
-                            circle.color = '#f00';
                             addNodePermit = false;
                             break;
                         } else {
-                            circle.active = false;
-                            circle.color = '#000';
                             addNodePermit = true;
                         }
                     }
@@ -327,6 +413,7 @@ function mousePressed() {
                             memberProps['lineEnd']=lineEnd;
                             memberProps['strokeWeight']=2;
                             memberProps['color']='#000';
+                            memberProps['length']=calcLength(lineStart,lineEnd);
                             members.push(memberProps);                            
                         }
                     }
@@ -373,12 +460,13 @@ function mousePressed() {
                 distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);
                 if(distanceSup<=radius*2)
                 {
+
                     if (loadOptions.value()=="Load in X direction"){
-                        drawLoadAt(i,1,-20);
+                        drawLoadAt(i,1,loadInp.value());
                         break;
                     }
                     else if (loadOptions.value()=="Load in Y direction"){
-                        drawLoadAt(i,2,20);
+                        drawLoadAt(i,2,loadInp.value());
                         break;
                     }
                     else if (loadOptions.value()=="Remove Load"){
@@ -390,7 +478,7 @@ function mousePressed() {
         }
     } 
   // Prevent default functionality.
-  return false;
+  //return false;
 }//End of mousePressed()
 
 // Run when the mouse/touch is dragging.
