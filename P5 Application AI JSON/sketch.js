@@ -276,6 +276,7 @@ function draw() {
                     line(circle.x-15+ll*7.5,circle.y+15,circle.x-15-l+ll*7.5,circle.y+15+l);                
             }
             circle.hasLoadInX;
+            var wt;
             if (circle.hasLoadInX!=0 || circle.hasLoadInY!=0){
                 if (circle.hasLoadInX>0){//load in positive X direction
                     stroke('#429bf4');
@@ -283,15 +284,25 @@ function draw() {
                     line(circle.x,circle.y,circle.x-13,circle.y-8);
                     line(circle.x,circle.y,circle.x-13,circle.y+8);
                     line(circle.x,circle.y,circle.x-30,circle.y);
+                    wt = textWidth(circle.hasLoadInX);
+                    fill('#f4f4f4');
+                    stroke(0);
+                    rect(circle.x-50, circle.y-25, wt+10, 20);
                     noStroke();
-                    text(circle.hasLoadInX, circle.x-30,circle.y-10);
+                    fill(0);
+                    text(circle.hasLoadInX, circle.x-45,circle.y-10);
                 }if (circle.hasLoadInX<0){//load in negative X direction
                     stroke('#429bf4');
                     strokeWeight(3);
                     line(circle.x,circle.y,circle.x+13,circle.y-8);
                     line(circle.x,circle.y,circle.x+13,circle.y+8);
                     line(circle.x,circle.y,circle.x+30,circle.y);
+                    wt = textWidth(circle.hasLoadInX);
+                    fill('#f4f4f4');
+                    stroke(0);
+                    rect(circle.x+25, circle.y-25, wt+10, 20);
                     noStroke();
+                    fill(0);
                     text(circle.hasLoadInX, circle.x+30,circle.y-10);
                 }if (circle.hasLoadInY<0){//load in positive Y direction
                     stroke('#429bf4');
@@ -299,16 +310,26 @@ function draw() {
                     line(circle.x,circle.y,circle.x+8,circle.y-13);
                     line(circle.x,circle.y,circle.x-8,circle.y-13);
                     line(circle.x,circle.y,circle.x,circle.y-30);
+                    wt = textWidth(circle.hasLoadInY);
+                    fill('#f4f4f4');
+                    stroke(0);
+                    rect(circle.x+5, circle.y-50, wt+10, 20);
                     noStroke();
-                    text(circle.hasLoadInY, circle.x+5,circle.y-30);
+                    fill(0);
+                    text(circle.hasLoadInY, circle.x+10,circle.y-35);
                 }if (circle.hasLoadInY>0){//load in negative Y direction
                     stroke('#429bf4');
                     strokeWeight(3);
                     line(circle.x,circle.y,circle.x+8,circle.y+13);
                     line(circle.x,circle.y,circle.x-8,circle.y+13);
                     line(circle.x,circle.y,circle.x,circle.y+30);
+                    wt = textWidth(circle.hasLoadInY);
+                    fill('#f4f4f4');
+                    stroke(0);
+                    rect(circle.x+5, circle.y+20, wt+10, 20);
                     noStroke();
-                    text(circle.hasLoadInY, circle.x+5,circle.y+30);
+                    fill(0);
+                    text(circle.hasLoadInY, circle.x+10,circle.y+35);
                 }
             }
 		}
