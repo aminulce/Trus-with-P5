@@ -54,12 +54,14 @@ function radioChilds()
         supportOptionsRollerOptions.remove();
     }
 }
+
+
 var circle, editNodeInpX,editNodeInpY;
 function nodeClicked(){
     if (circles.length > 0) {
         for (var i = 0; i < circles.length; i++) {
             circle = circles[i],
-                    distance = dist(mouseX, mouseY, circle.x, circle.y);
+                    distance = dist(mouseX, mouseY, circle.x, circle.y);  //Using p5 standard function dist
             if (distance <= radius*2) {//radius*2 for getting rid of overlapping of nodes
                 isInside = true;
                 circle.active = true;
@@ -134,7 +136,7 @@ function drawLoadAt(i,loadDirection,loadVal){
 }
 // Define variables.
 var radius = 7;
-var circles = [], members = [];//curcles object
+var circles = [], members = [];//circles object
 function nodeOptionChilds(){
     if(nodeOptions.value()=='Edit Node'){
 //        editNodeInpX = createInput();
@@ -175,6 +177,17 @@ function loadOptionChilds(){
     createLoadInp(loadOptions.value())
 }
 function calculate(){
+	if (circles.length !=0)
+	{
+		const circlesjsonString = JSON.stringify(Object.assign({}, circles), null, 2)
+		console.log(circlesjsonString);
+	}
+	
+	if (members.length !=0)
+	{
+		const memberjsonString = JSON.stringify(Object.assign({}, members), null,2);
+		console.log(memberjsonString);
+	}
     if(circles.length>2)
     {
         
@@ -184,7 +197,7 @@ function calculate(){
     
 }
 function calcLength(s,e){//s=start, e=end
-    return dist(circles[s].x,circles[s].y,circles[e].x,circles[e].y);
+    return dist(circles[s].x,circles[s].y,circles[e].x,circles[e].y);  //Using p5 standard function dist
 }
 // Set up canvas.
 var button;
@@ -216,11 +229,11 @@ function draw() {
     if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height)
     {
         if(radio.value()=="Node")
-            cursor(CROSS);
-        if (circles.length > 0) {
+            cursor(CROSS); //This sets the cursor visual
+        if (circles.length > 0) { //Checks if there is any node present in the canvas
             for (i = 0; i < circles.length; i++) {
                 var circle = circles[i],
-                        distance = dist(mouseX, mouseY, circle.x, circle.y);
+                        distance = dist(mouseX, mouseY, circle.x, circle.y);  //Using p5 standard function dist
 
                     if (radio.value()!="Node"){
                         if (distance <= radius*2){
@@ -377,7 +390,7 @@ function mousePressed() {
                 if (circles.length > 0) {
                     for (i = 0; i < circles.length; i++) {
                         var circle = circles[i],
-                                distance = dist(mouseX, mouseY, circle.x, circle.y);
+                                distance = dist(mouseX, mouseY, circle.x, circle.y);  //Using p5 standard function dist
                         if (distance <= radius*2) {//radius*2 for getting rid of overlapping of nodes
                             addNodePermit = false;
                             break;
@@ -399,6 +412,7 @@ function mousePressed() {
                         circleProps["hasLoadInX"]=0;
                         circleProps["hasLoadInY"]=0;
                         circles.push(circleProps);
+						
                     }
                 }
 
@@ -413,7 +427,7 @@ function mousePressed() {
            for (i = 0; i<circles.length; i++)
            {
                 circle = circles[i];
-                distance = dist(mouseX, mouseY, circle.x, circle.y);
+                distance = dist(mouseX, mouseY, circle.x, circle.y); //Using p5 standard function dist
 
                 if(distance<=radius*2)
                 { 
@@ -435,7 +449,7 @@ function mousePressed() {
                             memberProps['strokeWeight']=2;
                             memberProps['color']='#000';
                             memberProps['length']=calcLength(lineStart,lineEnd);
-                            members.push(memberProps);                            
+                            members.push(memberProps);        
                         }
                     }
                     break;
@@ -451,7 +465,7 @@ function mousePressed() {
            for (i = 0; i<circles.length; i++)
            {
                 circleInd = i;
-                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);
+                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y); //Using p5 standard function dist
                 if(distanceSup<=radius*2)
                 {
                     if (supportOptions.value()=="Roller"){
@@ -478,7 +492,7 @@ function mousePressed() {
            for (i = 0; i<circles.length; i++)
            {
                 circleInd = i;
-                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);
+                distanceSup = dist(mouseX, mouseY, circles[i].x, circles[i].y);  //Using p5 standard function dist
                 if(distanceSup<=radius*2)
                 {
 
